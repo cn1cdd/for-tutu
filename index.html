@@ -154,6 +154,9 @@
       pointer-events:auto;
       touch-action:none;
       transform-origin:center;
+      left:auto;
+      right:auto;
+      bottom:auto;
     }
 
     .sticker:active{ cursor:grabbing; }
@@ -189,6 +192,24 @@
     }
 
     .video-fallback{ display:none; }
+
+    .video-mask{
+      position:absolute;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.22));
+      color:#fff;
+      font-size:26px;
+      z-index:4;
+      pointer-events:none;
+      text-shadow:0 4px 12px rgba(0,0,0,.18);
+    }
+
+    .video-card.is-fallback .video-mask{
+      display:flex;
+    }
 
     .tape{
       position:absolute;
@@ -239,23 +260,13 @@
       box-shadow:var(--shadow-strong);
     }
 
-    .s1{ width:120px; height:150px; left:6%;  top:12%; --r:-8deg; transform:rotate(-8deg); z-index:11; }
-    .s2{ width:140px; height:98px;  right:6%; top:12%; --r:7deg;  transform:rotate(7deg);  z-index:11; }
-    .s3{ width:122px; height:156px; right:8%; top:35%; --r:8deg;  transform:rotate(8deg);  z-index:11; }
-    .s4{ width:136px; height:96px;  left:7%;  top:44%; --r:-5deg; transform:rotate(-5deg); z-index:11; }
-    .s5{ width:132px; height:160px; left:10%; bottom:14%; --r:7deg; transform:rotate(7deg); z-index:11; }
-    .s6{ width:90px;  height:90px;  right:14%; bottom:16%; --r:-4deg; transform:rotate(-4deg); border-radius:50%; z-index:11; }
-
-    /* 中间主图：5.jpg */
-    .s7{
-      width:138px;
-      height:184px;
-      left:50%;
-      top:50%;
-      --r:0deg;
-      transform:translate(-50%,-50%) rotate(0deg);
-      z-index:50;
-    }
+    .s1{ width:128px; height:164px; left:7%;  top:15%; --r:-8deg; transform:rotate(-8deg); }
+    .s2{ width:154px; height:108px; right:7%; top:14%; --r:7deg;  transform:rotate(7deg); }
+    .s3{ width:130px; height:166px; right:10%; top:36%; --r:8deg; transform:rotate(8deg); }
+    .s4{ width:146px; height:102px; left:8%;  top:43%; --r:-5deg; transform:rotate(-5deg); }
+    .s5{ width:170px; height:208px; left:12%; bottom:15%; --r:7deg; transform:rotate(7deg); }
+    .s6{ width:88px;  height:88px;  right:16%; bottom:18%; --r:-4deg; transform:rotate(-4deg); border-radius:50%; }
+    .s7{ width:86px;  height:116px; left:40%; top:31%; --r:-6deg; transform:rotate(-6deg); }
 
     .spark{
       left:22px;
@@ -433,7 +444,6 @@
       <div class="sticker s3 draggable video-card">
         <div class="tape" style="top:8px; left:50%; transform:translateX(-50%) rotate(7deg);"></div>
         <video
-          class="wx-video"
           src="./videos/1.mp4"
           muted
           autoplay
@@ -441,12 +451,13 @@
           playsinline
           webkit-playsinline
           x5-playsinline
-          x5-video-player-type="h5-page"
+          x5-video-player-type="h5"
           x5-video-player-fullscreen="false"
+          x-webkit-airplay="allow"
           preload="auto"
-          poster="./videos/poster1.webp"
-        ></video>
+          poster="./videos/poster1.webp"></video>
         <img class="video-fallback" src="./videos/poster1.webp" alt="">
+        <div class="video-mask">▶</div>
       </div>
 
       <div class="sticker s4 draggable">
@@ -457,7 +468,6 @@
       <div class="sticker s5 draggable video-card">
         <div class="tape" style="top:8px; right:18px; transform:rotate(9deg);"></div>
         <video
-          class="wx-video"
           src="./videos/2.mp4"
           muted
           autoplay
@@ -465,12 +475,13 @@
           playsinline
           webkit-playsinline
           x5-playsinline
-          x5-video-player-type="h5-page"
+          x5-video-player-type="h5"
           x5-video-player-fullscreen="false"
+          x-webkit-airplay="allow"
           preload="auto"
-          poster="./videos/poster2.webp"
-        ></video>
+          poster="./videos/poster2.webp"></video>
         <img class="video-fallback" src="./videos/poster2.webp" alt="">
+        <div class="video-mask">▶</div>
       </div>
 
       <div class="sticker s6 draggable">
@@ -587,74 +598,86 @@
       }
     }
 
-    function isWeChat() {
-      return /MicroMessenger/i.test(navigator.userAgent);
-    }
+    function enableWeChatInlineVideo(video, card, fallback) {
+      if (!video) return;
 
-    function setupWechatVideos() {
-      document.querySelectorAll('.video-card').forEach(card => {
-        const video = card.querySelector('video');
-        const fallback = card.querySelector('.video-fallback');
-        if (!video) return;
+      const showFallback = () => {
+        if (fallback) fallback.style.display = 'block';
+        video.style.display = 'none';
+        if (card) card.classList.add('is-fallback');
+      };
 
-        let fallbackShown = false;
+      const showVideo = () => {
+        video.style.display = 'block';
+        if (fallback) fallback.style.display = 'none';
+        if (card) card.classList.remove('is-fallback');
+      };
 
-        const showFallback = () => {
-          if (fallbackShown) return;
-          fallbackShown = true;
-          video.style.display = 'none';
-          if (fallback) fallback.style.display = 'block';
-        };
-
-        const hideFallback = () => {
-          fallbackShown = false;
-          video.style.display = 'block';
-          if (fallback) fallback.style.display = 'none';
-        };
-
-        const tryPlay = () => {
-          video.muted = true;
-          video.setAttribute('muted', 'true');
-          const p = video.play();
-          if (p && typeof p.catch === 'function') {
-            p.catch(() => {});
-          }
-        };
-
-        video.addEventListener('loadeddata', hideFallback);
-        video.addEventListener('canplay', hideFallback);
-        video.addEventListener('playing', hideFallback);
-        video.addEventListener('error', showFallback);
-
-        // 非微信环境：如果很久都没加载出来，显示封面
-        // 微信环境：先不急着 fallback，等待桥和用户手势补偿
-        setTimeout(() => {
-          if (video.readyState < 2 && video.paused) {
-            if (!isWeChat()) showFallback();
-          }
-        }, 6000);
-
-        tryPlay();
-
-        document.addEventListener('WeixinJSBridgeReady', function () {
-          tryPlay();
-        }, false);
-
-        const onceTouchPlay = () => {
-          tryPlay();
-          setTimeout(() => {
-            if (video.readyState < 2 && video.paused) {
+      const tryPlay = () => {
+        const p = video.play();
+        if (p && typeof p.catch === 'function') {
+          p.then(showVideo).catch(() => {
+            if (video.readyState >= 2) {
+              showVideo();
+            } else {
               showFallback();
             }
-          }, 1800);
-        };
+          });
+        }
+      };
 
-        document.addEventListener('touchstart', onceTouchPlay, { once: true, passive: true });
-        document.addEventListener('click', onceTouchPlay, { once: true });
-      });
+      video.muted = true;
+      video.autoplay = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.setAttribute('muted', '');
+      video.setAttribute('autoplay', '');
+      video.setAttribute('loop', '');
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+      video.setAttribute('x5-playsinline', '');
+      video.setAttribute('x5-video-player-type', 'h5');
+      video.setAttribute('x5-video-player-fullscreen', 'false');
+      video.setAttribute('preload', 'auto');
+
+      video.addEventListener('loadeddata', showVideo);
+      video.addEventListener('canplay', showVideo);
+      video.addEventListener('playing', showVideo);
+      video.addEventListener('error', showFallback);
+      video.addEventListener('stalled', showFallback);
+      video.addEventListener('abort', showFallback);
+
+      tryPlay();
+
+      document.addEventListener('WeixinJSBridgeReady', () => {
+        tryPlay();
+      }, false);
+
+      document.addEventListener('YixinJSBridgeReady', () => {
+        tryPlay();
+      }, false);
+
+      const unlock = () => {
+        tryPlay();
+        document.removeEventListener('touchstart', unlock);
+        document.removeEventListener('click', unlock);
+      };
+
+      document.addEventListener('touchstart', unlock, { passive: true, once: true });
+      document.addEventListener('click', unlock, { once: true });
+
+      setTimeout(() => {
+        if (video.readyState < 2 || video.paused) {
+          showFallback();
+        }
+      }, 3000);
     }
 
-    setupWechatVideos();
+    document.querySelectorAll('.video-card').forEach(card => {
+      const video = card.querySelector('video');
+      const fallback = card.querySelector('.video-fallback');
+      enableWeChatInlineVideo(video, card, fallback);
+    });
 
     app.addEventListener('click', (e) => {
       const clickable = e.target.closest('.sticker,.badge,.pill');
@@ -683,27 +706,22 @@
 
     document.querySelectorAll('.sticker').forEach((card, idx) => {
       let t = Math.random() * Math.PI * 2;
-
       function breathe() {
         if (card.dataset.dragging === '1') {
           requestAnimationFrame(breathe);
           return;
         }
-
+        if (card.dataset.moved === '1') {
+          requestAnimationFrame(breathe);
+          return;
+        }
         t += 0.018 + idx * 0.001;
         const y = Math.sin(t) * 2.2;
         const rotate = Math.sin(t * 0.9) * 0.9;
         const base = getComputedStyle(card).getPropertyValue('--r') || '0deg';
-
-        if (card.classList.contains('s7')) {
-          card.style.transform = `translate(-50%,-50%) translateY(${y}px) rotate(calc(${base} + ${rotate}deg))`;
-        } else {
-          card.style.transform = `translateY(${y}px) rotate(calc(${base} + ${rotate}deg))`;
-        }
-
+        card.style.transform = `translateY(${y}px) rotate(calc(${base} + ${rotate}deg))`;
         requestAnimationFrame(breathe);
       }
-
       breathe();
     });
 
@@ -727,16 +745,20 @@
       let originX = 0, originY = 0;
       let dragging = false;
       let lastTrailTime = 0;
+      let movedEnough = false;
 
       const onMove = (clientX, clientY) => {
         const dx = clientX - startX;
         const dy = clientY - startY;
+
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) movedEnough = true;
+
         card.style.left = `${originX + dx}px`;
         card.style.top = `${originY + dy}px`;
-
-        if (card.classList.contains('s7')) {
-          card.style.transform = `translateY(0px) rotate(var(--r))`;
-        }
+        card.style.right = 'auto';
+        card.style.bottom = 'auto';
+        card.style.transform = `rotate(${getComputedStyle(card).getPropertyValue('--r') || '0deg'})`;
+        card.dataset.moved = '1';
 
         const now = Date.now();
         if(now - lastTrailTime > 24){
@@ -747,10 +769,17 @@
 
       const down = (clientX, clientY) => {
         dragging = true;
+        movedEnough = false;
         card.dataset.dragging = '1';
         card.style.zIndex = ++z;
         card.style.transition = 'none';
+
         const rect = card.getBoundingClientRect();
+        card.style.left = rect.left + 'px';
+        card.style.top = rect.top + 'px';
+        card.style.right = 'auto';
+        card.style.bottom = 'auto';
+
         startX = clientX;
         startY = clientY;
         originX = rect.left;
@@ -762,6 +791,7 @@
         dragging = false;
         card.dataset.dragging = '0';
         card.style.transition = '';
+        if (!movedEnough) card.dataset.moved = card.dataset.moved || '0';
       };
 
       card.addEventListener('pointerdown', (e) => {
@@ -830,7 +860,13 @@
     });
 
     window.addEventListener('load', () => {
-      setTimeout(() => burst(window.innerWidth * 0.5, window.innerHeight * 0.55, 18), 300);
+      setTimeout(() => {
+        burst(window.innerWidth * 0.5, window.innerHeight * 0.55, 18);
+        document.querySelectorAll('.video-card video').forEach(video => {
+          const p = video.play();
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        });
+      }, 300);
     });
   </script>
 </body>
