@@ -181,8 +181,7 @@
       100%{ transform:scale(1) rotate(var(--r)); }
     }
 
-    .sticker img,
-    .sticker video{
+    .sticker img{
       width:100%;
       height:100%;
       object-fit:cover;
@@ -191,36 +190,8 @@
       background:#fff6fa;
     }
 
-    .video-fallback{ display:none; }
-
-    .video-mask{
-      position:absolute;
-      inset:0;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.22));
-      color:#fff;
-      font-size:26px;
-      z-index:4;
-      pointer-events:none;
-      text-shadow:0 4px 12px rgba(0,0,0,.18);
-    }
-
-    .video-card.is-fallback .video-mask{
-      display:flex;
-    }
-
     .tape{
-      position:absolute;
-      width:56px;
-      height:18px;
-      background:rgba(255, 244, 200, .72);
-      border:1px solid rgba(255,255,255,.8);
-      border-radius:6px;
-      box-shadow:0 4px 10px rgba(0,0,0,.05);
-      z-index:3;
-      pointer-events:none;
+      display:none;
     }
 
     .mini{
@@ -260,7 +231,6 @@
       box-shadow:var(--shadow-strong);
     }
 
-    /* 其他卡片相对缩小，5.jpg 对应的 s7 放大一点 */
     .s1{ width:124px; height:156px; left:8%;  top:16%; --r:-8deg; transform:rotate(-8deg); }
     .s2{ width:146px; height:102px; right:8%; top:15%; --r:7deg;  transform:rotate(7deg); }
     .s3{ width:124px; height:158px; right:11%; top:37%; --r:8deg; transform:rotate(8deg); }
@@ -433,56 +403,23 @@
       <div class="mini" style="left:42%; bottom:28%;">✦</div>
 
       <div class="sticker s1 draggable">
-        <div class="tape" style="top:8px; left:14px; transform:rotate(-12deg);"></div>
         <img src="./images/1.jpg" alt="">
       </div>
 
       <div class="sticker s2 draggable">
-        <div class="tape" style="top:8px; right:16px; transform:rotate(10deg);"></div>
         <img src="./images/2.jpg" alt="">
       </div>
 
-      <div class="sticker s3 draggable video-card">
-        <div class="tape" style="top:8px; left:50%; transform:translateX(-50%) rotate(7deg);"></div>
-        <video
-          src="./videos/1.mp4"
-          muted
-          autoplay
-          loop
-          playsinline
-          webkit-playsinline
-          x5-playsinline
-          x5-video-player-type="h5"
-          x5-video-player-fullscreen="false"
-          x-webkit-airplay="allow"
-          preload="auto"
-          poster="./videos/poster1.webp"></video>
-        <img class="video-fallback" src="./videos/poster1.webp" alt="">
-        <div class="video-mask">▶</div>
+      <div class="sticker s3 draggable">
+        <img src="./images/6.jpg" alt="">
       </div>
 
       <div class="sticker s4 draggable">
-        <div class="tape" style="top:8px; left:18px; transform:rotate(-8deg);"></div>
         <img src="./images/3.jpg" alt="">
       </div>
 
-      <div class="sticker s5 draggable video-card">
-        <div class="tape" style="top:8px; right:18px; transform:rotate(9deg);"></div>
-        <video
-          src="./videos/2.mp4"
-          muted
-          autoplay
-          loop
-          playsinline
-          webkit-playsinline
-          x5-playsinline
-          x5-video-player-type="h5"
-          x5-video-player-fullscreen="false"
-          x-webkit-airplay="allow"
-          preload="auto"
-          poster="./videos/poster2.webp"></video>
-        <img class="video-fallback" src="./videos/poster2.webp" alt="">
-        <div class="video-mask">▶</div>
+      <div class="sticker s5 draggable">
+        <img src="./images/7.jpg" alt="">
       </div>
 
       <div class="sticker s6 draggable">
@@ -490,7 +427,6 @@
       </div>
 
       <div class="sticker s7 draggable">
-        <div class="tape" style="top:8px; left:12px; transform:rotate(-10deg);"></div>
         <img src="./images/5.jpg" alt="">
       </div>
 
@@ -598,87 +534,6 @@
         setTimeout(() => el.remove(), 850);
       }
     }
-
-    function enableWeChatInlineVideo(video, card, fallback) {
-      if (!video) return;
-
-      const showFallback = () => {
-        if (fallback) fallback.style.display = 'block';
-        video.style.display = 'none';
-        if (card) card.classList.add('is-fallback');
-      };
-
-      const showVideo = () => {
-        video.style.display = 'block';
-        if (fallback) fallback.style.display = 'none';
-        if (card) card.classList.remove('is-fallback');
-      };
-
-      const tryPlay = () => {
-        const p = video.play();
-        if (p && typeof p.catch === 'function') {
-          p.then(showVideo).catch(() => {
-            if (video.readyState >= 2) {
-              showVideo();
-            } else {
-              showFallback();
-            }
-          });
-        }
-      };
-
-      video.muted = true;
-      video.autoplay = true;
-      video.loop = true;
-      video.playsInline = true;
-      video.setAttribute('muted', '');
-      video.setAttribute('autoplay', '');
-      video.setAttribute('loop', '');
-      video.setAttribute('playsinline', '');
-      video.setAttribute('webkit-playsinline', '');
-      video.setAttribute('x5-playsinline', '');
-      video.setAttribute('x5-video-player-type', 'h5');
-      video.setAttribute('x5-video-player-fullscreen', 'false');
-      video.setAttribute('preload', 'auto');
-
-      video.addEventListener('loadeddata', showVideo);
-      video.addEventListener('canplay', showVideo);
-      video.addEventListener('playing', showVideo);
-      video.addEventListener('error', showFallback);
-      video.addEventListener('stalled', showFallback);
-      video.addEventListener('abort', showFallback);
-
-      tryPlay();
-
-      document.addEventListener('WeixinJSBridgeReady', () => {
-        tryPlay();
-      }, false);
-
-      document.addEventListener('YixinJSBridgeReady', () => {
-        tryPlay();
-      }, false);
-
-      const unlock = () => {
-        tryPlay();
-        document.removeEventListener('touchstart', unlock);
-        document.removeEventListener('click', unlock);
-      };
-
-      document.addEventListener('touchstart', unlock, { passive: true, once: true });
-      document.addEventListener('click', unlock, { once: true });
-
-      setTimeout(() => {
-        if (video.readyState < 2 || video.paused) {
-          showFallback();
-        }
-      }, 3000);
-    }
-
-    document.querySelectorAll('.video-card').forEach(card => {
-      const video = card.querySelector('video');
-      const fallback = card.querySelector('.video-fallback');
-      enableWeChatInlineVideo(video, card, fallback);
-    });
 
     app.addEventListener('click', (e) => {
       const clickable = e.target.closest('.sticker,.badge,.pill');
@@ -863,10 +718,6 @@
     window.addEventListener('load', () => {
       setTimeout(() => {
         burst(window.innerWidth * 0.5, window.innerHeight * 0.55, 18);
-        document.querySelectorAll('.video-card video').forEach(video => {
-          const p = video.play();
-          if (p && typeof p.catch === 'function') p.catch(() => {});
-        });
       }, 300);
     });
   </script>
